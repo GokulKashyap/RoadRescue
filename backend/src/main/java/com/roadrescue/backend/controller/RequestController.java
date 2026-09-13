@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,6 +34,9 @@ public class RequestController {
 
     @Autowired
     ServiceProviderRepository providerRepository;
+
+    @Autowired
+    SimpMessagingTemplate messagingTemplate;
 
     // CUSTOMER: Create a new request
     @PostMapping
@@ -54,6 +58,9 @@ public class RequestController {
         request.setStatus(RequestStatus.PENDING);
 
         requestRepository.save(request);
+
+        // Broadcast to all online providers
+        messagingTemplate.convertAndSend("/topic/provider/requests", request);
 
         return ResponseEntity.ok(request);
     }
@@ -91,6 +98,9 @@ public class RequestController {
         request.setStatus(RequestStatus.ACCEPTED);
         request.setProvider(providerOpt.get());
         requestRepository.save(request);
+
+        // Notify the specific customer who made the request
+        messagingTemplate.convertAndSend("/topic/customer/" + request.getCustomer().getId() + "/status", request);
 
         return ResponseEntity.ok(request);
     }

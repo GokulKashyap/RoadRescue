@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import api from '../services/api';
+import { Client } from '@stomp/stompjs';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -22,13 +23,25 @@ export default function ProviderDashboard() {
   useEffect(() => {
     fetchProfile();
     fetchActiveJob();
-    const interval = setInterval(() => {
-      if (isOnline && !activeJob) {
-        fetchPendingRequests();
+    
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    const client = new Client({
+      brokerURL: 'ws://localhost:8081/ws',
+      connectHeaders: { Authorization: `Bearer ${token}` },
+      onConnect: () => {
+        console.log("Connected to Provider WebSocket");
+        client.subscribe('/topic/provider/requests', (message) => {
+          // A new request was broadcasted. Refresh the list!
+          fetchPendingRequests();
+        });
       }
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [isOnline, activeJob]);
+    });
+    client.activate();
+
+    return () => client.deactivate();
+  }, []);
 
   const fetchProfile = async () => {
     try {
@@ -79,6 +92,7 @@ export default function ProviderDashboard() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
+    localStorage.removeItem('userId');
     navigate('/');
   };
 

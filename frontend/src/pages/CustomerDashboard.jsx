@@ -5,6 +5,7 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import api from '../services/api';
+import { Client } from '@stomp/stompjs';
 
 // Fix for default Leaflet icon in React
 delete L.Icon.Default.prototype._getIconUrl;
@@ -35,8 +36,38 @@ export default function CustomerDashboard() {
 
   useEffect(() => {
     fetchActiveRequest();
-    const interval = setInterval(fetchActiveRequest, 5000); // Poll every 5s
-    return () => clearInterval(interval);
+    
+    const token = localStorage.getItem('token');
+    const userId = localStorage.getItem('userId');
+    
+    if (!token || !userId) return;
+
+    const client = new Client({
+      brokerURL: 'ws://localhost:8081/ws',
+      connectHeaders: {
+        Authorization: `Bearer ${token}`
+      },
+      onConnect: () => {
+        console.log("Connected to WebSocket");
+        client.subscribe(`/topic/customer/${userId}/status`, (message) => {
+          const updatedRequest = JSON.parse(message.body);
+          if (updatedRequest.status !== 'COMPLETED' && updatedRequest.status !== 'CANCELLED') {
+            setActiveRequest(updatedRequest);
+          } else {
+            setActiveRequest(null);
+          }
+        });
+      },
+      onStompError: (frame) => {
+        console.error('Broker reported error: ' + frame.headers['message']);
+      }
+    });
+
+    client.activate();
+
+    return () => {
+      client.deactivate();
+    };
   }, []);
 
   const fetchActiveRequest = async () => {
@@ -55,6 +86,7 @@ export default function CustomerDashboard() {
   const handleLogout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('role');
+    localStorage.removeItem('userId');
     navigate('/');
   };
 
