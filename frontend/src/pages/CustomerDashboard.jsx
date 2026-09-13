@@ -126,25 +126,29 @@ export default function CustomerDashboard() {
       </header>
 
       {activeRequest ? (
-        <div className="glass-panel animate-fade-in" style={{ padding: '2rem', textAlign: 'center' }}>
+        <div className="glass-panel animate-fade-in hover-scale" style={{ padding: '2.5rem', textAlign: 'center', maxWidth: '600px', margin: '0 auto' }}>
           {activeRequest.status === 'PENDING' ? (
             <>
-              <Loader2 size={48} className="animate-spin" color="var(--primary)" style={{ margin: '0 auto 1rem' }} />
-              <h3>Broadcasting Request...</h3>
-              <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>Waiting for a nearby provider to accept your job.</p>
+              <div className="animate-pulse-soft" style={{ background: 'rgba(59, 130, 246, 0.1)', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+                <Loader2 size={40} className="animate-spin" color="var(--primary)" />
+              </div>
+              <h3 style={{ fontSize: '1.75rem' }}>Broadcasting Request...</h3>
+              <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '1.1rem' }}>Searching for nearby providers.</p>
             </>
           ) : (
             <>
-              <AlertCircle size={48} color="var(--secondary)" style={{ margin: '0 auto 1rem' }} />
-              <h3>Help is on the way!</h3>
-              <p style={{ color: 'var(--secondary)', fontWeight: 'bold', fontSize: '1.2rem', marginBottom: '1rem' }}>
-                {activeRequest.provider?.companyName || 'A provider'} accepted your request!
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem', boxShadow: '0 0 20px rgba(16, 185, 129, 0.3)' }}>
+                <AlertCircle size={40} color="var(--secondary)" />
+              </div>
+              <h3 style={{ fontSize: '1.75rem' }}>Help is on the way!</h3>
+              <p style={{ color: 'var(--secondary)', fontWeight: '600', fontSize: '1.25rem', marginBottom: '1.5rem' }}>
+                {activeRequest.provider?.companyName || 'A provider'} is en route.
               </p>
             </>
           )}
-          <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '8px', textAlign: 'left', marginTop: '1rem' }}>
-            <p><strong>Issue:</strong> {activeRequest.issueDescription}</p>
-            <p><strong>Status:</strong> {activeRequest.status}</p>
+          <div style={{ background: 'rgba(0,0,0,0.4)', padding: '1.5rem', borderRadius: '12px', textAlign: 'left', marginTop: '1rem', border: '1px solid var(--border-color)' }}>
+            <p style={{ marginBottom: '0.5rem' }}><strong style={{ color: 'var(--primary)' }}>Issue:</strong> {activeRequest.issueDescription}</p>
+            <p><strong style={{ color: 'var(--primary)' }}>Status:</strong> <span style={{ background: 'rgba(255,255,255,0.1)', padding: '2px 8px', borderRadius: '12px', fontSize: '0.85rem' }}>{activeRequest.status}</span></p>
           </div>
         </div>
       ) : (
@@ -161,11 +165,11 @@ export default function CustomerDashboard() {
             </div>
           )}
 
-          <div style={{ height: '300px', borderRadius: '8px', overflow: 'hidden', marginBottom: '1rem', border: '1px solid var(--border-color)' }}>
+          <div className="map-container-wrapper dark-map" style={{ height: '350px', marginBottom: '1.5rem' }}>
             <MapContainer center={defaultCenter} zoom={13} style={{ height: '100%', width: '100%' }}>
               <TileLayer
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
               />
               <LocationPicker position={position} setPosition={setPosition} />
             </MapContainer>

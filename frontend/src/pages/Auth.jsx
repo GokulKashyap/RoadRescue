@@ -63,37 +63,25 @@ export default function Auth() {
 
         <div className="glass-panel animate-fade-in" style={{ padding: '2rem', animationDelay: '0.1s' }}>
           
-          <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
-            <button 
-              className={`btn btn-full ${isLogin ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => {setIsLogin(true); setError('');}}
-            >
+          <div className="toggle-container">
+            <div className="toggle-slider" style={{ transform: !isLogin ? 'translateX(100%)' : 'translateX(0)' }}></div>
+            <div className={`toggle-option ${isLogin ? 'active' : ''}`} onClick={() => {setIsLogin(true); setError('');}}>
               Login
-            </button>
-            <button 
-              className={`btn btn-full ${!isLogin ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={() => {setIsLogin(false); setError('');}}
-            >
+            </div>
+            <div className={`toggle-option ${!isLogin ? 'active' : ''}`} onClick={() => {setIsLogin(false); setError('');}}>
               Register
-            </button>
+            </div>
           </div>
 
           {!isLogin && (
-            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', background: 'rgba(0,0,0,0.2)', padding: '0.5rem', borderRadius: '8px' }}>
-              <button 
-                className={`btn btn-full ${role === 'CUSTOMER' ? 'btn-primary' : 'btn-secondary'}`}
-                style={{ padding: '8px' }}
-                onClick={() => setRole('CUSTOMER')}
-              >
-                <Car size={18} /> Driver
-              </button>
-              <button 
-                className={`btn btn-full ${role === 'PROVIDER' ? 'btn-primary' : 'btn-secondary'}`}
-                style={{ padding: '8px' }}
-                onClick={() => setRole('PROVIDER')}
-              >
-                <Truck size={18} /> Provider
-              </button>
+            <div className="toggle-container animate-fade-in stagger-1" style={{ transform: 'scale(0.9)', marginBottom: '1.5rem', marginTop: '-10px' }}>
+              <div className="toggle-slider" style={{ transform: role === 'PROVIDER' ? 'translateX(100%)' : 'translateX(0)', background: 'linear-gradient(135deg, var(--secondary), #34d399)', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.4)' }}></div>
+              <div className={`toggle-option ${role === 'CUSTOMER' ? 'active' : ''}`} onClick={() => setRole('CUSTOMER')}>
+                <Car size={16} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '4px' }} /> Driver
+              </div>
+              <div className={`toggle-option ${role === 'PROVIDER' ? 'active' : ''}`} onClick={() => setRole('PROVIDER')}>
+                <Truck size={16} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '4px' }} /> Provider
+              </div>
             </div>
           )}
 
@@ -103,9 +91,8 @@ export default function Auth() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} className="animate-fade-in stagger-2">
             <div className="input-group">
-              <label>Email Address</label>
               <input 
                 type="email" 
                 className="input-field" 
@@ -114,10 +101,10 @@ export default function Auth() {
                 value={formData.email}
                 onChange={e => setFormData({...formData, email: e.target.value})}
               />
+              <label style={{ position: 'absolute', top: '-10px', left: '10px', background: 'var(--card-bg)', padding: '0 5px', fontSize: '0.75rem' }}>Email Address</label>
             </div>
             
             <div className="input-group">
-              <label>Password</label>
               <input 
                 type="password" 
                 className="input-field" 
@@ -126,11 +113,11 @@ export default function Auth() {
                 value={formData.password}
                 onChange={e => setFormData({...formData, password: e.target.value})}
               />
+              <label style={{ position: 'absolute', top: '-10px', left: '10px', background: 'var(--card-bg)', padding: '0 5px', fontSize: '0.75rem' }}>Password</label>
             </div>
 
             {!isLogin && role === 'PROVIDER' && (
-              <div className="input-group animate-fade-in">
-                <label>Company Name</label>
+              <div className="input-group animate-fade-in stagger-3">
                 <input 
                   type="text" 
                   className="input-field" 
@@ -139,11 +126,12 @@ export default function Auth() {
                   value={formData.companyName}
                   onChange={e => setFormData({...formData, companyName: e.target.value})}
                 />
+                <label style={{ position: 'absolute', top: '-10px', left: '10px', background: 'var(--card-bg)', padding: '0 5px', fontSize: '0.75rem' }}>Company Name</label>
               </div>
             )}
 
-            <button type="submit" className="btn btn-primary btn-full" style={{ marginTop: '1rem' }} disabled={loading}>
-              {loading ? <Loader2 className="animate-spin" /> : (isLogin ? 'Sign In' : 'Create Account')}
+            <button type="submit" className="btn btn-primary btn-full" style={{ marginTop: '1.5rem', padding: '16px' }} disabled={loading}>
+              {loading ? <Loader2 className="animate-spin" /> : (isLogin ? 'Secure Sign In' : 'Create Account')}
             </button>
           </form>
 
