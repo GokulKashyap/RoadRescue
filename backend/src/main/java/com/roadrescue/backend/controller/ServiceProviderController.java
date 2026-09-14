@@ -22,7 +22,9 @@ public class ServiceProviderController {
 
     @PostMapping("/status")
     @PreAuthorize("hasAuthority('PROVIDER')")
-    public ResponseEntity<?> toggleStatus(@RequestParam boolean available) {
+    public ResponseEntity<?> toggleStatus(@RequestParam boolean available, 
+                                          @RequestParam(required = false) Double lat, 
+                                          @RequestParam(required = false) Double lng) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         UserDetailsImpl userDetails = (UserDetailsImpl) auth.getPrincipal();
         
@@ -33,6 +35,10 @@ public class ServiceProviderController {
 
         ServiceProvider provider = providerOpt.get();
         provider.setAvailable(available);
+        if (available && lat != null && lng != null) {
+            provider.setCurrentLat(lat);
+            provider.setCurrentLng(lng);
+        }
         providerRepository.save(provider);
 
         return ResponseEntity.ok(new MessageResponse("Status updated to " + (available ? "Online" : "Offline")));

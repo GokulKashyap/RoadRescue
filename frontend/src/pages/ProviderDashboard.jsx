@@ -31,9 +31,10 @@ export default function ProviderDashboard() {
       brokerURL: 'ws://localhost:8081/ws',
       connectHeaders: { Authorization: `Bearer ${token}` },
       onConnect: () => {
+        const userId = localStorage.getItem('userId');
         console.log("Connected to Provider WebSocket");
-        client.subscribe('/topic/provider/requests', (message) => {
-          // A new request was broadcasted. Refresh the list!
+        client.subscribe(`/topic/provider/${userId}/requests`, (message) => {
+          // A new request was broadcasted to us specifically. Refresh the list!
           fetchPendingRequests();
         });
       }
@@ -77,11 +78,26 @@ export default function ProviderDashboard() {
   const handleToggleOnline = async () => {
     try {
       const newStatus = !isOnline;
-      await api.post(`/providers/status?available=${newStatus}`);
-      setIsOnline(newStatus);
+      
       if (newStatus) {
-        fetchPendingRequests();
+        if (!navigator.geolocation) {
+          alert('Geolocation is not supported by your browser');
+          return;
+        }
+        
+        navigator.geolocation.getCurrentPosition(async (position) => {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          
+          await api.post(`/providers/status?available=true&lat=${lat}&lng=${lng}`);
+          setIsOnline(true);
+          fetchPendingRequests();
+        }, (error) => {
+          alert('Failed to get location. Please allow location access to go online.');
+        });
       } else {
+        await api.post(`/providers/status?available=false`);
+        setIsOnline(false);
         setPendingRequests([]);
       }
     } catch (err) {

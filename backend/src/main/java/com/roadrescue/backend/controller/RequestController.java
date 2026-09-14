@@ -59,8 +59,12 @@ public class RequestController {
 
         requestRepository.save(request);
 
-        // Broadcast to all online providers
-        messagingTemplate.convertAndSend("/topic/provider/requests", request);
+        // Phase 5: Smart Dispatching - Find providers within 15km
+        List<ServiceProvider> nearbyProviders = providerRepository.findNearbyAvailableProviders(request.getLatitude(), request.getLongitude(), 15.0);
+        
+        for (ServiceProvider provider : nearbyProviders) {
+            messagingTemplate.convertAndSend("/topic/provider/" + provider.getUser().getId() + "/requests", request);
+        }
 
         return ResponseEntity.ok(request);
     }
@@ -69,7 +73,29 @@ public class RequestController {
     @GetMapping("/pending")
     @PreAuthorize("hasAuthority('PROVIDER')")
     public ResponseEntity<?> getPendingRequests() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UserDetailsImpl userDetails = (UserDetailsImpl) auth.getPrincipal();
+        Optional<ServiceProvider> providerOpt = providerRepository.findByUserId(userDetails.getId());
+
         List<AssistanceRequest> pending = requestRepository.findByStatusOrderByCreatedAtDesc(RequestStatus.PENDING);
+        
+        // Filter by 15km radius if we know the provider's location
+        if (providerOpt.isPresent() && providerOpt.get().getCurrentLat() != null && providerOpt.get().getCurrentLng() != null) {
+            double pLat = providerOpt.get().getCurrentLat();
+            double pLng = providerOpt.get().getCurrentLng();
+            
+            pending = pending.stream().filter(req -> {
+                double distance = 6371 * Math.acos(
+                    Math.cos(Math.toRadians(req.getLatitude())) * 
+                    Math.cos(Math.toRadians(pLat)) * 
+                    Math.cos(Math.toRadians(pLng) - Math.toRadians(req.getLongitude())) + 
+                    Math.sin(Math.toRadians(req.getLatitude())) * 
+                    Math.sin(Math.toRadians(pLat))
+                );
+                return distance <= 15.0 || Double.isNaN(distance); // isNaN check just in case points are exactly identical causing floating point issues
+            }).toList();
+        }
+
         return ResponseEntity.ok(pending);
     }
 
